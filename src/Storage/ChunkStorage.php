@@ -5,7 +5,7 @@ namespace Kladislav\LaravelChunkUpload\Storage;
 use Illuminate\Contracts\Filesystem\Filesystem as FilesystemContract;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Collection;
-use League\Flysystem\Adapter\Local;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\FilesystemInterface;
 use Kladislav\LaravelChunkUpload\ChunkFile;
 use Kladislav\LaravelChunkUpload\Config\AbstractConfig;
@@ -66,15 +66,15 @@ class ChunkStorage
         $driver = $this->driver();
 
         // try to get the adapter
-        if (!method_exists($driver, 'getAdapter')) {
-            throw new RuntimeException('FileSystem driver must have an adapter implemented');
-        }
+        // if (!method_exists($driver, 'getAdapter')) {
+        //     throw new RuntimeException('FileSystem driver must have an adapter implemented');
+        // }
 
         // get the disk adapter
-        $this->diskAdapter = $driver->getAdapter();
+        $this->diskAdapter = $this->adapter();
 
         // check if its local adapter
-        $this->isLocalDisk = $this->diskAdapter instanceof Local;
+        $this->isLocalDisk = $this->diskAdapter instanceof LocalFilesystemAdapter;
     }
 
     /**
@@ -87,7 +87,7 @@ class ChunkStorage
     public function getDiskPathPrefix()
     {
         if ($this->isLocalDisk) {
-            return $this->diskAdapter->getPathPrefix();
+            return $this->disk->path('');
         }
 
         throw new RuntimeException('The full path is not supported on current disk - local adapter supported only');
@@ -188,5 +188,10 @@ class ChunkStorage
     public function driver()
     {
         return $this->disk()->getDriver();
+    }
+
+    public function adapter()
+    {
+        return $this->disk()->getAdapter();
     }
 }
